@@ -1,13 +1,20 @@
 /*************************************************************************
     Fun Timer Clickable
           by Maj Jenkins
+    March 11, 2021
 
     Overview:
+    A quick, simple, and fun test of the p5.js timer library 
+    by Scott Kildall (https://github.com/scottkildall/p5.timer) 
+    and the clickable library by Lartu 
+    (https://github.com/Lartu/p5.clickable).
 
+    Click the duck to start a party!
  
     ---------------------------------------------------------------------
     Notes: 
-     (1)
+     (1) I wanted to make the fish animate on sine/cosine waves 
+     (moving back and forth) but could not figure out that animation.
 **************************************************************************/
 
 
@@ -35,6 +42,8 @@ imgList = [];
 var quack;
 var fluff;
 
+// Amplitude
+var amplitude;
 
 // Buttons and timers
 var duckButton;
@@ -77,9 +86,12 @@ function setup() {
 
   makeDuckButton();
 
-  // Create a new timer with 5 second
-  fishTimer = new Timer(5000);
+  // Create a new timer with 10 second
+  fishTimer = new Timer(10000);
   fishTimer.start();
+
+  // Amplitude
+  amplitude = new p5.Amplitude();
  }
 
 /*************************************************************************
@@ -93,18 +105,23 @@ function draw() {
   textFont(aubreyFont);
   textSize(width/25);
   textAlign(CENTER);
-
-  // Title
-  text('click the ducky', width/3, height/4);
   
   // Background
   drawSeaweed();
 
+  // Timer party
+  fishRain();
+
   // Draw button
   duckButton.draw();
 
-  // Timer party
-  fishRain();
+  // Title
+    if (waitForClick === true) {
+        text('click the ducky', width/3, height/4);
+    }
+    else if (waitForClick === false) {
+        text('fish party!', width/3, height/4);
+    }
 
   // fsMessage();
 }
@@ -147,20 +164,46 @@ function makeDuckButton() {
 }
 
 duckButtonPressed = function () {
-  duckButton.image = imgList[1];
-  quack.play();
+  if (waitForClick === true) {
+    waitForClick = false;
+    fishTimer.start();
 
-  // Change timer state to no longer wait for the mouse
-  waitForClick = false;
-  fishTimer.start();
+    // Change duck properties
+    duckButton.image = imgList[1];
 
-  // play the song
-  fluff.play();
+    // Play sfx
+    quack.play();
+    fluff.play();
+  }
+  else if (waitForClick === false) {
+    if (fishTimer.expired()) {
+      duckButton.image = imgList[1];
+      quack.play();
+
+      // play the song
+      fluff.play();
+    } 
+    else {
+      duckButton.image = imgList[0];
+    }
+  }
 }
 
 duckButtonHover = function () {
-  duckButton.image = imgList[1];
-  drawDuckText('click for a surprise');
+   if (waitForClick === true) {
+      duckButton.image = imgList[1];
+      drawDuckText('click for a surprise');
+  }
+  else if (waitForClick === false) {
+    if (fishTimer.expired()) {
+        duckButton.image = imgList[1];
+        drawDuckText('click for a surprise');
+      } 
+      else {
+        duckButton.image = imgList[1];
+        drawDuckText('what a party!');
+      }
+    }
 }
 
 duckButtonOutside = function () {
@@ -195,18 +238,23 @@ function updateTimer() {
     if (fluff.isPlaying) {
     fluff.stop();
     }
+    // reset waitForClick
+    waitForClick = true;
   }
   else {
-    // how much time left in the party
+    // say how much time left in the party
     text(Math.round(fishTimer.getRemainingTime()/1000), width/3, height/2);
 
+    // Amplitude
+    let level = amplitude.getLevel();
+    let size = map(level, 0, 1, 0, 200);
+
     // fish party
-    for (i = 10; i <= width; i += width/10) {
-      for (j = 10; j <= width; j += width/10) {
-        image(imgList[2], i, j, 100, 100);
+    for (i = -((width/20)/2); i <= width; i += width/10) {
+      for (j = -50; j <= width; j += width/10) {
+        image(imgList[2], i + random(width/20, width/22), j + size, 100, 100);
       }
     }
-
   }
 }
 
